@@ -1,4 +1,4 @@
-# Spotlighting Data Marking (beta)
+# Spotlighting via Data Marking (beta)
 
 > This is just an attempt, the code can be improved by 100x and is still in development
 
