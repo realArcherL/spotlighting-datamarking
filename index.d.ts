@@ -1,0 +1,33 @@
+export interface RandomMarkingOptions {
+  p?: number;
+  minGap?: number;
+  encoding?: string;
+}
+
+export interface MarkingResult {
+  markedText: string;
+  dataMarker: string;
+}
+
+export class DataMarkingViaSpotlighting {
+  minK: number;
+  maxK: number;
+  defaultP: number;
+  defaultMinGap: number;
+  encoding: string;
+
+  constructor(
+    minK?: number,
+    maxK?: number,
+    defaultP?: number,
+    defaultMinGap?: number,
+    defaultEncoding?: string
+  );
+
+  genDataMarker(): string;
+  markData(text: string): MarkingResult;
+  randomlyMarkedData(
+    text: string,
+    options?: RandomMarkingOptions
+  ): MarkingResult;
+}

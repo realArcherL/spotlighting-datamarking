@@ -1,21 +1,38 @@
-import { randomBytes } from 'node:crypto';
+import { randomInt } from 'node:crypto';
+import { getEncoding } from 'js-tiktoken';
 
 const PUA_START = 0xe000,
   PUA_END = 0xf8ff,
   N = PUA_END - PUA_START + 1;
 
 class DataMarkingViaSpotlighting {
-  constructor(minK = 6, maxK = 11) {
+  /**
+   * @param {number} minK - Minimum marker length (default: 7)
+   * @param {number} maxK - Maximum marker length (default: 12)
+   * @param {number} defaultP - Default probability of marker insertion (default: 0.2)
+   * @param {number} defaultMinGap - Default minimum gap between markers (default: 1)
+   * @param {string} defaultEncoding - Default tokenizer encoding (default: 'cl100k_base')
+   *                                  Options: 'cl100k_base' (GPT-4), 'p50k_base' (Codex), 'r50k_base' (GPT-2/3), 'gpt2'
+   */
+  constructor(
+    minK = 7,
+    maxK = 12,
+    defaultP = 0.2,
+    defaultMinGap = 1,
+    defaultEncoding = 'cl100k_base'
+  ) {
     this.minK = minK;
     this.maxK = maxK;
+    this.defaultP = defaultP;
+    this.defaultMinGap = defaultMinGap;
+    this.encoding = defaultEncoding;
   }
 
   genDataMarker() {
-    const k = this.minK + (randomBytes(1)[0] % (this.maxK - this.minK + 1));
-    const bytes = randomBytes(k);
+    const k = this.minK + randomInt(this.maxK - this.minK + 1);
     let s = '';
     for (let i = 0; i < k; i++) {
-      const idx = bytes[i] % N;
+      const idx = randomInt(N);
       s += String.fromCodePoint(PUA_START + idx);
     }
     return s.normalize('NFC');
@@ -30,17 +47,34 @@ class DataMarkingViaSpotlighting {
     };
   }
 
-  randomMarking() {
-    // Placeholder for future implementation
-    // This method will handle random marking logic
+  randomlyMarkedData(text, options = {}) {
+    // Merge user options with defaults
+    const {
+      p = this.defaultP,
+      minGap = this.defaultMinGap,
+      encoding = this.encoding,
+    } = options;
+
+    const enc = getEncoding(encoding);
+    const ids = enc.encode(text);
+    const dataMarker = this.genDataMarker();
+
+    const out = [];
+    let since = minGap,
+      thr = Math.floor(p * 1_000_000);
+
+    for (let i = 0; i < ids.length; i++) {
+      out.push(enc.decode([ids[i]]));
+      if (i < ids.length - 1 && since >= minGap && randomInt(1_000_000) < thr) {
+        out.push(dataMarker);
+        since = 0;
+      } else {
+        since++;
+      }
+    }
+
+    return { markedText: out.join(''), dataMarker: dataMarker };
   }
 }
 
-// Example usage
-const marker = new DataMarkingViaSpotlighting();
-const originalText =
-  'This is a sample text to be marked, Now with spotlighting data marking.';
-const markedText = marker.markData(originalText);
-console.log('Original Text:', originalText);
-console.log('Generated Token:', markedText.dataMarker);
-console.log('Marked Text:', markedText);
+export { DataMarkingViaSpotlighting };
