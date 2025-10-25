@@ -19,7 +19,7 @@ npm install spotlighting-datamarking
 # Run all tests
 npm test
 
-# Run with coverage (100% coverage!)
+# Run with coverage
 npm run test:coverage
 
 # Watch mode for development
