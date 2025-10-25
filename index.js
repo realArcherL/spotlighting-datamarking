@@ -70,15 +70,34 @@ class DataMarkingViaSpotlighting {
     const out = [];
     let since = minGap,
       thr = Math.floor(p * 1_000_000);
+    let markerInserted = false;
 
     for (let i = 0; i < ids.length; i++) {
       out.push(enc.decode([ids[i]]));
       if (i < ids.length - 1 && since >= minGap && randomInt(1_000_000) < thr) {
         out.push(dataMarker);
         since = 0;
+        markerInserted = true;
       } else {
         since++;
       }
+    }
+
+    // If no marker was inserted probabilistically, insert one at a random valid position
+    if (!markerInserted && ids.length > 1) {
+      const validPositions = [];
+      for (let i = minGap; i < ids.length; i++) {
+        validPositions.push(i);
+      }
+
+      // If minGap is too high and no valid positions exist, fall back to inserting at the halfway point
+      if (validPositions.length === 0) {
+        validPositions.push(Math.floor(ids.length / 2));
+      }
+
+      // Pick a random valid token index
+      const tokenIdx = validPositions[randomInt(validPositions.length)];
+      out.splice(tokenIdx, 0, dataMarker);
     }
 
     let markedText = out.join('');
