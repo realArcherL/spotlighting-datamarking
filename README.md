@@ -10,7 +10,20 @@ A simple package to implement data marking functionality to make indirect prompt
 ## Installation
 
 ```bash
-npm install
+npm install spotlighting-datamarking
+```
+
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage (100% coverage!)
+npm run test:coverage
+
+# Watch mode for development
+npm run test:watch
 ```
 
 ## Usage

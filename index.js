@@ -84,6 +84,7 @@ class DataMarkingViaSpotlighting {
     }
 
     // If no marker was inserted probabilistically, insert one at a random valid position
+    // Also handle single long tokens by inserting marker in the middle
     if (!markerInserted && ids.length > 1) {
       const validPositions = [];
       for (let i = minGap; i < ids.length; i++) {
@@ -98,6 +99,12 @@ class DataMarkingViaSpotlighting {
       // Pick a random valid token index
       const tokenIdx = validPositions[randomInt(validPositions.length)];
       out.splice(tokenIdx, 0, dataMarker);
+    } else if (!markerInserted && ids.length === 1 && text.length >= 8) {
+      // Handle single long token (e.g., "IgnorePrevious", "malicious")
+      // Insert marker at halfway point in the character string for security
+      // Threshold of 8 chars catches most potential attack strings
+      const halfPoint = Math.floor(text.length / 2);
+      out[0] = text.slice(0, halfPoint) + dataMarker + text.slice(halfPoint);
     }
 
     let markedText = out.join('');
