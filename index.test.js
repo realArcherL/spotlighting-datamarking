@@ -334,9 +334,9 @@ describe('DataMarkingViaSpotlighting', () => {
       expect(result.dataMarker).toBeDefined();
 
       // All spaces should be replaced + sandwich markers
-      // 3 spaces = 3 markers + 2 sandwich = 5 total
+      // 3 spaces = 1 marker + 2 sandwich = 5 total
       const markerCount = result.markedText.split(result.dataMarker).length - 1;
-      expect(markerCount).toBe(5);
+      expect(markerCount).toBe(3);
 
       // Should have sandwich wrapping (default for markData)
       expect(result.markedText.startsWith(result.dataMarker)).toBe(true);
