@@ -38,11 +38,18 @@ class DataMarkingViaSpotlighting {
     return s.normalize('NFC');
   }
 
-  markData(text) {
+  markData(text, options = {}) {
     // use replace all to replace all spaces with token
+    const { sandwich = true } = options;
     const dataMarker = this.genDataMarker();
+    let markedText = text.replaceAll(' ', dataMarker);
+
+    if (sandwich) {
+      markedText = dataMarker + markedText + dataMarker;
+    }
+
     return {
-      markedText: text.replaceAll(' ', dataMarker),
+      markedText: markedText,
       dataMarker: dataMarker,
     };
   }
@@ -53,6 +60,7 @@ class DataMarkingViaSpotlighting {
       p = this.defaultP,
       minGap = this.defaultMinGap,
       encoding = this.encoding,
+      sandwich = true,
     } = options;
 
     const enc = getEncoding(encoding);
@@ -73,7 +81,13 @@ class DataMarkingViaSpotlighting {
       }
     }
 
-    return { markedText: out.join(''), dataMarker: dataMarker };
+    let markedText = out.join('');
+
+    if (sandwich) {
+      markedText = dataMarker + markedText + dataMarker;
+    }
+
+    return { markedText: markedText, dataMarker: dataMarker };
   }
 }
 

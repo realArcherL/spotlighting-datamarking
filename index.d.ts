@@ -2,6 +2,11 @@ export interface RandomMarkingOptions {
   p?: number;
   minGap?: number;
   encoding?: string;
+  sandwich?: boolean;
+}
+
+export interface MarkingOptions {
+  sandwich?: boolean;
 }
 
 export interface MarkingResult {
@@ -25,6 +30,6 @@ export class DataMarkingViaSpotlighting {
   );
 
   genDataMarker(): string;
-  markData(text: string): MarkingResult;
+  markData(text: string, options?: MarkingOptions): MarkingResult;
   randomlyMarkData(text: string, options?: RandomMarkingOptions): MarkingResult;
 }

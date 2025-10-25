@@ -24,12 +24,16 @@ const marker = new DataMarkingViaSpotlighting();
 // Basic usage - mark all spaces
 const text = 'This is a test';
 const result = marker.markData(text);
-console.log(result.markedText); // Text with invisible markers
+console.log(result.markedText); // Text with invisible markers (wrapped with markers by default)
 console.log(result.dataMarker); // The marker used
+
+// Disable sandwich wrapping if needed
+const result1b = marker.markData(text, { sandwich: false });
+console.log(result1b.markedText); // Text without wrapper markers
 
 // Random marking - insert markers probabilistically
 const result2 = marker.randomlyMarkData('Your text here');
-console.log(result2.markedText); // Text with random markers
+console.log(result2.markedText); // Text with random markers (wrapped with markers by default)
 console.log(result2.dataMarker); // The marker used
 
 // Custom options
@@ -37,6 +41,7 @@ const result3 = marker.randomlyMarkData('Your text here', {
   p: 0.5, // Probability of marker insertion (0-1)
   minGap: 2, // Minimum tokens between markers
   encoding: 'cl100k_base', // Tokenizer encoding
+  sandwich: false, // Set to false to disable wrapping text with markers (default: true)
 });
 ```
 
@@ -58,6 +63,48 @@ new DataMarkingViaSpotlighting(
 - `defaultMinGap` - Default minimum gap between markers (default: 1)
 - `defaultEncoding` - Default tokenizer encoding (default: 'cl100k_base')
 
+## Methods
+
+### `markData(text, options?)`
+
+Marks all spaces in the text with data markers.
+
+**Options:**
+
+- `sandwich` - Whether to wrap the entire text with markers at the beginning and end (default: `true`)
+
+### `randomlyMarkData(text, options?)`
+
+Randomly inserts markers between tokens based on probability.
+
+**Options:**
+
+- `p` - Probability of marker insertion (0-1) (default: `0.2`)
+- `minGap` - Minimum tokens between markers (default: `1`)
+- `encoding` - Tokenizer encoding (default: `'cl100k_base'`)
+  - Available options: `'cl100k_base'` (GPT-4), `'p50k_base'` (Codex), `'r50k_base'` (GPT-2/3), `'gpt2'`
+- `sandwich` - Whether to wrap the entire text with markers at the beginning and end (default: `true`)
+
+### `genDataMarker()`
+
+Generates a random data marker string using Private Use Area (PUA) Unicode characters.
+
+## Sandwich Mode (Default)
+
+By default, both `markData()` and `randomlyMarkData()` wrap the marked text with data markers at the beginning and end. This "sandwich" approach provides stronger boundary detection between trusted instructions and untrusted data.
+
+```javascript
+// Sandwich mode enabled (default)
+const result = marker.markData('Hello World');
+// Result: [MARKER]Hello[MARKER]World[MARKER]
+
+// Sandwich mode disabled
+const result = marker.markData('Hello World', { sandwich: false });
+// Result: Hello[MARKER]World
+```
+
+This feature helps LLMs better distinguish between system instructions and user-provided data, reducing the risk of prompt injection attacks.
+
 ## Example
 
 See `example.js` for more examples.
@@ -68,11 +115,7 @@ node example.js
 
 ## How to use it?
 
-Based on the Microsoft's competition's implementation here:
-
-https://github.com/microsoft/llmail-inject-challenge/blob/ad115315c1cb34381d20875d6675a6cfe6ca80fa/src/agent/workloads/prompt_utils.py#L126-L127
-
-We can have something like this
+Based on the [Microsoft's competition's implementation](https://github.com/microsoft/llmail-inject-challenge/blob/ad115315c1cb34381d20875d6675a6cfe6ca80fa/src/agent/workloads/prompt_utils.py#L126-L127), we can have something like this
 
 ```javascript
 import { DataMarkingViaSpotlighting } from 'spotlighting-datamarking';

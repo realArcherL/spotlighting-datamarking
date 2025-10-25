@@ -86,4 +86,29 @@ console.log('Marked:', result8.markedText);
 console.log('Marker used:', result8.dataMarker);
 console.log();
 
+// Example 9: Using sandwich option with markData
+console.log('9. Basic Data Marking with Sandwich (sandwich = true):');
+const text9 = 'This text will be wrapped with markers';
+const result9 = marker.markData(text9, { sandwich: true });
+console.log('Original:', text9);
+console.log('Marked:', result9.markedText);
+console.log('Marker used:', result9.dataMarker);
+console.log('Note: Text is wrapped as <marker>markedText<marker>');
+console.log();
+
+// Example 10: Using sandwich option with randomlyMarkData
+console.log('10. Random Data Marking with Sandwich (sandwich = true):');
+const text10 = 'Random markers inside plus sandwich wrapping';
+const result10 = marker.randomlyMarkData(text10, {
+  p: 0.3,
+  sandwich: true,
+});
+console.log('Original:', text10);
+console.log('Marked:', result10.markedText);
+console.log('Marker used:', result10.dataMarker);
+console.log(
+  'Note: Text has random internal markers AND is wrapped with markers'
+);
+console.log();
+
 console.log('=== End of Examples ===');
