@@ -28,12 +28,12 @@ console.log(result.markedText); // Text with invisible markers
 console.log(result.dataMarker); // The marker used
 
 // Random marking - insert markers probabilistically
-const result2 = marker.randomlyMarkedData('Your text here');
+const result2 = marker.randomlyMarkData('Your text here');
 console.log(result2.markedText); // Text with random markers
 console.log(result2.dataMarker); // The marker used
 
 // Custom options
-const result3 = marker.randomlyMarkedData('Your text here', {
+const result3 = marker.randomlyMarkData('Your text here', {
   p: 0.5, // Probability of marker insertion (0-1)
   minGap: 2, // Minimum tokens between markers
   encoding: 'cl100k_base', // Tokenizer encoding

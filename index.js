@@ -47,7 +47,7 @@ class DataMarkingViaSpotlighting {
     };
   }
 
-  randomlyMarkedData(text, options = {}) {
+  randomlyMarkData(text, options = {}) {
     // Merge user options with defaults
     const {
       p = this.defaultP,

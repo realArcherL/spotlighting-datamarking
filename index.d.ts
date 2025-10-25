@@ -26,8 +26,5 @@ export class DataMarkingViaSpotlighting {
 
   genDataMarker(): string;
   markData(text: string): MarkingResult;
-  randomlyMarkedData(
-    text: string,
-    options?: RandomMarkingOptions
-  ): MarkingResult;
+  randomlyMarkData(text: string, options?: RandomMarkingOptions): MarkingResult;
 }
