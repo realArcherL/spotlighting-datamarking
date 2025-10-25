@@ -91,7 +91,7 @@ class DataMarkingViaSpotlighting {
       if (
         i < ids.length - 1 &&
         gapSinceLastMarker >= minGap &&
-        Math.random() < p
+        randomInt(1e9) / 1e9 < p
       ) {
         out.push(dataMarker);
         gapSinceLastMarker = 0;
