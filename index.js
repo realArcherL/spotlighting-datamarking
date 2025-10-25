@@ -42,7 +42,7 @@ class DataMarkingViaSpotlighting {
     // use replace all to replace all spaces with token
     const { sandwich = true } = options;
     const dataMarker = this.genDataMarker();
-    let markedText = text.replaceAll(' ', dataMarker);
+    let markedText = text.replace(/\s+/g, dataMarker);
 
     if (sandwich) {
       markedText = dataMarker + markedText + dataMarker;
@@ -55,7 +55,6 @@ class DataMarkingViaSpotlighting {
   }
 
   randomlyMarkData(text, options = {}) {
-    // Merge user options with defaults
     const {
       p = this.defaultP,
       minGap = this.defaultMinGap,
@@ -67,53 +66,57 @@ class DataMarkingViaSpotlighting {
     const ids = enc.encode(text);
     const dataMarker = this.genDataMarker();
 
-    const out = [];
-    let since = minGap,
-      thr = Math.floor(p * 1_000_000);
-    let markerInserted = false;
+    // Handle single long token by splitting it
+    if (ids.length === 1 && text.length >= 8) {
+      const halfPoint = Math.floor(text.length / 2);
+      const markedText = sandwich
+        ? dataMarker +
+          text.slice(0, halfPoint) +
+          dataMarker +
+          text.slice(halfPoint) +
+          dataMarker
+        : text.slice(0, halfPoint) + dataMarker + text.slice(halfPoint);
+      return { markedText, dataMarker };
+    }
 
+    const out = [];
+    let gapSinceLastMarker = minGap;
+    let markerWasInserted = false;
+
+    // First pass: probabilistic insertion
     for (let i = 0; i < ids.length; i++) {
       out.push(enc.decode([ids[i]]));
-      if (i < ids.length - 1 && since >= minGap && randomInt(1_000_000) < thr) {
+
+      // Try to insert marker after this token (but not after the last token)
+      if (
+        i < ids.length - 1 &&
+        gapSinceLastMarker >= minGap &&
+        Math.random() < p
+      ) {
         out.push(dataMarker);
-        since = 0;
-        markerInserted = true;
+        gapSinceLastMarker = 0;
+        markerWasInserted = true;
       } else {
-        since++;
+        gapSinceLastMarker++;
       }
     }
 
-    // If no marker was inserted probabilistically, insert one at a random valid position
-    // Also handle single long tokens by inserting marker in the middle
-    if (!markerInserted && ids.length > 1) {
-      const validPositions = [];
-      for (let i = minGap; i < ids.length; i++) {
-        validPositions.push(i);
-      }
-
-      // If minGap is too high and no valid positions exist, fall back to inserting at the halfway point
-      if (validPositions.length === 0) {
-        validPositions.push(Math.floor(ids.length / 2));
-      }
-
-      // Pick a random valid token index
-      const tokenIdx = validPositions[randomInt(validPositions.length)];
-      out.splice(tokenIdx, 0, dataMarker);
-    } else if (!markerInserted && ids.length === 1 && text.length >= 8) {
-      // Handle single long token (e.g., "IgnorePrevious", "malicious")
-      // Insert marker at halfway point in the character string for security
-      // Threshold of 8 chars catches most potential attack strings
-      const halfPoint = Math.floor(text.length / 2);
-      out[0] = text.slice(0, halfPoint) + dataMarker + text.slice(halfPoint);
+    // Fallback: ensure at least one marker if none were inserted
+    if (!markerWasInserted && ids.length > 1) {
+      // Find valid insertion points (respecting minGap from start)
+      const maxValidIndex = ids.length - 1;
+      const minValidIndex = Math.min(minGap, Math.floor(ids.length / 2));
+      const insertionPoint =
+        minValidIndex + randomInt(maxValidIndex - minValidIndex + 1);
+      out.splice(insertionPoint, 0, dataMarker);
     }
 
     let markedText = out.join('');
-
     if (sandwich) {
       markedText = dataMarker + markedText + dataMarker;
     }
 
-    return { markedText: markedText, dataMarker: dataMarker };
+    return { markedText, dataMarker };
   }
 }
 
