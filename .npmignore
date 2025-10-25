@@ -1,0 +1,25 @@
+# Test files
+*.test.js
+jest.config.js
+
+# Coverage reports
+coverage/
+
+# Development files
+.vscode/
+.idea/
+
+# Git files
+.git/
+.gitignore
+
+# CI/CD
+.github/
+
+# Environment files
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db

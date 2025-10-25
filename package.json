@@ -1,6 +1,6 @@
 {
   "name": "spotlighting-datamarking",
-  "version": "1.0.0",
+  "version": "beta-1.0.0",
   "description": "This is a package to implement data marking functionality to make indirect prompt injections difficult, based on the research done by Microsoft",
   "main": "index.js",
   "type": "module",
@@ -9,9 +9,29 @@
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "security",
+    "prompt-injection",
+    "llm",
+    "ai-security",
+    "spotlighting",
+    "data-marking",
+    "prompt-protection",
+    "microsoft-research"
+  ],
+  "author": "Nishant Jain",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/realArcherL/spotlighting-datamarking.git"
+  },
   "license": "ISC",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md",
+    "license",
+    "example.js"
+  ],
   "dependencies": {
     "js-tiktoken": "^1.0.21"
   },
