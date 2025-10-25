@@ -39,7 +39,6 @@ class DataMarkingViaSpotlighting {
   }
 
   markData(text, options = {}) {
-    // use replace all to replace all spaces with token
     const { sandwich = true } = options;
     const dataMarker = this.genDataMarker();
     let markedText = text.replace(/\s+/g, dataMarker);
