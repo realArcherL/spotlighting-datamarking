@@ -41,7 +41,8 @@ class DataMarkingViaSpotlighting {
   markData(text, options = {}) {
     const { sandwich = true } = options;
     const dataMarker = this.genDataMarker();
-    let markedText = text.replace(/\s+/g, dataMarker);
+    // Replace each whitespace character individually to preserve 1:1 fidelity
+    let markedText = text.replace(/\s/g, dataMarker);
 
     if (sandwich) {
       markedText = dataMarker + markedText + dataMarker;
@@ -78,17 +79,23 @@ class DataMarkingViaSpotlighting {
       return { markedText, dataMarker };
     }
 
+    // Build token array by decoding each individually (needed for insertion logic)
+    const tokens = [];
+    for (let i = 0; i < ids.length; i++) {
+      tokens.push(enc.decode([ids[i]]));
+    }
+
     const out = [];
     let gapSinceLastMarker = minGap;
     let markerWasInserted = false;
 
     // First pass: probabilistic insertion
-    for (let i = 0; i < ids.length; i++) {
-      out.push(enc.decode([ids[i]]));
+    for (let i = 0; i < tokens.length; i++) {
+      out.push(tokens[i]);
 
       // Try to insert marker after this token (but not after the last token)
       if (
-        i < ids.length - 1 &&
+        i < tokens.length - 1 &&
         gapSinceLastMarker >= minGap &&
         randomInt(1e9) / 1e9 < p
       ) {
@@ -103,10 +110,11 @@ class DataMarkingViaSpotlighting {
     // Fallback: ensure at least one marker if none were inserted
     if (!markerWasInserted && ids.length > 1) {
       // Find valid insertion points (respecting minGap from start)
-      const maxValidIndex = ids.length - 1;
-      const minValidIndex = Math.min(minGap, Math.floor(ids.length / 2));
+      const minIdx = Math.max(minGap, 1);
+      const maxIdx = ids.length - 1;
+      // Ensure we have a valid range
       const insertionPoint =
-        minValidIndex + randomInt(maxValidIndex - minValidIndex + 1);
+        minIdx >= maxIdx ? maxIdx : minIdx + randomInt(maxIdx - minIdx + 1);
       out.splice(insertionPoint, 0, dataMarker);
     }
 
