@@ -99,69 +99,6 @@ new DataMarkingViaSpotlighting(
   - `'alphanumeric'` - Readable markers using 0-9, a-z, A-Z (default)
   - `'unicode'` - Invisible markers using Unicode Private Use Area (PUA) characters
 
-## Marker Types: Alphanumeric vs Unicode
-
-The library supports two types of markers, each with distinct advantages:
-
-### Alphanumeric Markers (Default)
-
-```javascript
-const marker = new DataMarkingViaSpotlighting();
-// Or explicitly:
-const marker = new DataMarkingViaSpotlighting(
-  7,
-  12,
-  0.2,
-  1,
-  'cl100k_base',
-  'alphanumeric'
-);
-
-const result = marker.markData('Hello World');
-console.log(result.markedText); // Example: "abc123XYZHelloabc123XYZWorldabc123XYZ"
-console.log(result.dataMarker); // Example: "abc123XYZ"
-```
-
-**Advantages:**
-
-- ✅ **Visible and readable** - Easy to debug and test
-- ✅ **Token efficient** - Takes fewer tokens in LLM context
-- ✅ **Clear separation** - Obvious visual distinction from content
-- ✅ **Development-friendly** - Great for logs and debugging
-
-**Best for:** Development, testing, debugging, logs
-
-### Unicode Markers (Invisible)
-
-```javascript
-const marker = new DataMarkingViaSpotlighting(
-  7,
-  12,
-  0.2,
-  1,
-  'cl100k_base',
-  'unicode'
-);
-
-const result = marker.markData('Hello World');
-console.log(result.markedText); // Looks like: "HelloWorld" (markers are invisible)
-console.log(result.dataMarker); // Unicode PUA characters (U+E000-U+F8FF)
-```
-
-**Advantages:**
-
-- ✅ **Invisible to users** - Clean output presentation
-- ✅ **Non-interfering** - PUA characters don't affect text meaning or rendering
-- ✅ **Professional appearance** - User-facing applications stay clean
-- ✅ **Semantic separation** - Markers are completely distinct from content
-
-**Trade-off:**
-
-- ⚠️ **Higher token usage** - Unicode PUA characters consume more tokens in LLM context
-- ⚠️ **Harder to debug** - Markers are invisible in standard output
-
-**Best for:** Production, user-facing applications, clean interfaces
-
 ### Runtime Marker Type Override
 
 You can override the marker type for individual method calls:
@@ -192,7 +129,7 @@ const result3 = marker.markData('Hello World', { markerType: 'alphanumeric' });
 
 - Use **alphanumeric** (default) for most cases - better token efficiency
 - Use **unicode** when you need invisible markers or guaranteed non-interference with user content
-- Consider your use case: development vs production, token budget, user experience
+- **Probability `p` controls** how many markers get inserted. Higher probability = more markers.
 
 ## Methods
 

@@ -116,7 +116,7 @@ class DataMarkingViaSpotlighting {
     }
 
     const out = [];
-    let gapSinceLastMarker = minGap;
+    let gapSinceLastMarker = 0;
     let markerWasInserted = false;
 
     // First pass: probabilistic insertion
@@ -139,8 +139,12 @@ class DataMarkingViaSpotlighting {
 
     // Fallback: ensure at least one marker if none were inserted
     if (!markerWasInserted && ids.length > 1) {
-      // Find valid insertion points (respecting minGap from start)
-      const minIdx = Math.max(minGap, 1);
+      // Auto-adjust minGap if it's unreasonably large (> half the tokens)
+      // This ensures markers can be inserted in the middle region of the text
+      const effectiveMinGap = Math.min(minGap, Math.floor(ids.length / 2));
+
+      // Find valid insertion points (respecting effectiveMinGap from start)
+      const minIdx = Math.max(effectiveMinGap, 1);
       const maxIdx = ids.length - 1;
       // Ensure we have a valid range
       const insertionPoint =

@@ -13,6 +13,7 @@
  */
 
 import { DataMarkingViaSpotlighting } from './index.js';
+import { getEncoding } from 'js-tiktoken';
 
 describe('DataMarkingViaSpotlighting', () => {
   let marker;
@@ -177,6 +178,146 @@ describe('DataMarkingViaSpotlighting', () => {
       // Single token text cannot have internal markers
       // (it's only 1 token, nowhere to insert between)
       expect(result.markedText).toBe(text);
+    });
+  });
+
+  describe('randomlyMarkData() - minGap Enforcement (Anti-Clustering)', () => {
+    test('should enforce minimum gap between consecutive markers', () => {
+      const text =
+        'The quick brown fox jumps over the lazy dog and runs very fast today';
+      const enc = getEncoding('cl100k_base');
+
+      const minGapValues = [1, 2, 3, 5];
+
+      minGapValues.forEach(minGap => {
+        // Run multiple times to ensure consistency
+        for (let attempt = 0; attempt < 20; attempt++) {
+          const result = marker.randomlyMarkData(text, {
+            p: 0.7, // High probability to insert many markers
+            minGap: minGap,
+            sandwich: false,
+          });
+
+          // Split by marker to get segments
+          const segments = result.markedText.split(result.dataMarker);
+
+          // Check each segment (except the last) has at least minGap tokens
+          for (let i = 0; i < segments.length - 1; i++) {
+            const segmentTokens = enc.encode(segments[i]);
+            expect(segmentTokens.length).toBeGreaterThanOrEqual(minGap);
+          }
+        }
+      });
+    });
+
+    test('should respect minGap=2 prevents adjacent token marking', () => {
+      const text = 'One Two Three Four Five Six Seven Eight Nine Ten';
+      const enc = getEncoding('cl100k_base');
+
+      // Test multiple times to ensure no violations
+      for (let i = 0; i < 50; i++) {
+        const result = marker.randomlyMarkData(text, {
+          p: 0.8,
+          minGap: 2,
+          sandwich: false,
+        });
+
+        const segments = result.markedText.split(result.dataMarker);
+
+        // Every segment between markers must have at least 2 tokens
+        for (let j = 0; j < segments.length - 1; j++) {
+          const segmentTokens = enc.encode(segments[j]);
+          expect(segmentTokens.length).toBeGreaterThanOrEqual(2);
+        }
+      }
+    });
+
+    test('should respect minGap=5 creates well-spaced markers', () => {
+      const text =
+        'The quick brown fox jumps over the lazy dog and runs fast through the forest';
+      const enc = getEncoding('cl100k_base');
+
+      for (let i = 0; i < 30; i++) {
+        const result = marker.randomlyMarkData(text, {
+          p: 0.6,
+          minGap: 5,
+          sandwich: false,
+        });
+
+        const segments = result.markedText.split(result.dataMarker);
+
+        // Every segment between markers must have at least 5 tokens
+        for (let j = 0; j < segments.length - 1; j++) {
+          const segmentTokens = enc.encode(segments[j]);
+          expect(segmentTokens.length).toBeGreaterThanOrEqual(5);
+        }
+      }
+    });
+
+    test('should never violate minGap constraint even with high probability', () => {
+      const text = 'A B C D E F G H I J K L M N O P Q R S T U V W X Y Z';
+      const enc = getEncoding('cl100k_base');
+
+      const result = marker.randomlyMarkData(text, {
+        p: 0.99, // Extremely high probability
+        minGap: 3,
+        sandwich: false,
+      });
+
+      const segments = result.markedText.split(result.dataMarker);
+
+      // Even with p=0.99, minGap=3 must be respected
+      for (let i = 0; i < segments.length - 1; i++) {
+        const segmentTokens = enc.encode(segments[i]);
+        expect(segmentTokens.length).toBeGreaterThanOrEqual(3);
+      }
+    });
+
+    test('should allow markers with minGap=1 (minimum spacing)', () => {
+      const text = 'The quick brown fox jumps over the lazy dog';
+      const enc = getEncoding('cl100k_base');
+
+      const result = marker.randomlyMarkData(text, {
+        p: 0.9,
+        minGap: 1,
+        sandwich: false,
+      });
+
+      const segments = result.markedText.split(result.dataMarker);
+
+      // All segments must have at least 1 token
+      for (let i = 0; i < segments.length - 1; i++) {
+        const segmentTokens = enc.encode(segments[i]);
+        expect(segmentTokens.length).toBeGreaterThanOrEqual(1);
+      }
+    });
+
+    test('should verify minGap prevents clustering across multiple runs', () => {
+      const text = 'Hello world this is a test of marker spacing functionality';
+      const enc = getEncoding('cl100k_base');
+
+      let totalViolations = 0;
+      const runs = 100;
+
+      for (let i = 0; i < runs; i++) {
+        const result = marker.randomlyMarkData(text, {
+          p: 0.7,
+          minGap: 2,
+          sandwich: false,
+        });
+
+        const segments = result.markedText.split(result.dataMarker);
+
+        for (let j = 0; j < segments.length - 1; j++) {
+          const segmentTokens = enc.encode(segments[j]);
+          if (segmentTokens.length < 2) {
+            totalViolations++;
+          }
+        }
+      }
+
+      // Should have ZERO violations across all runs
+      expect(totalViolations).toBe(0);
     });
   });
 
