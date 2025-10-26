@@ -135,7 +135,7 @@ const result3 = marker.markData('Hello World', { markerType: 'alphanumeric' });
 
 ### `markData(text, options?)`
 
-Marks all spaces in the text with data markers.
+Replaces all spaces in the text with data markers.
 
 **Options:**
 
