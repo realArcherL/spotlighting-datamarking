@@ -40,17 +40,17 @@ describe('DataMarkingViaSpotlighting', () => {
     });
   });
 
-  describe('genDataMarker()', () => {
+  describe('genDataMarkerUniCode()', () => {
     test('should generate a marker within specified length range', () => {
-      const dataMarker = marker.genDataMarker();
+      const dataMarker = marker.genDataMarkerUniCode();
       expect(dataMarker.length).toBeGreaterThanOrEqual(7);
       expect(dataMarker.length).toBeLessThanOrEqual(12);
     });
 
     test('should generate different markers each time', () => {
-      const marker1 = marker.genDataMarker();
-      const marker2 = marker.genDataMarker();
-      const marker3 = marker.genDataMarker();
+      const marker1 = marker.genDataMarkerUniCode();
+      const marker2 = marker.genDataMarkerUniCode();
+      const marker3 = marker.genDataMarkerUniCode();
 
       // At least one should be different (very high probability)
       expect(
@@ -60,7 +60,7 @@ describe('DataMarkingViaSpotlighting', () => {
 
     test('should use custom marker length', () => {
       const customMarker = new DataMarkingViaSpotlighting(3, 5);
-      const dataMarker = customMarker.genDataMarker();
+      const dataMarker = customMarker.genDataMarkerUniCode();
       expect(dataMarker.length).toBeGreaterThanOrEqual(3);
       expect(dataMarker.length).toBeLessThanOrEqual(5);
     });

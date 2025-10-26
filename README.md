@@ -31,7 +31,7 @@ npm run test:watch
 ```javascript
 import { DataMarkingViaSpotlighting } from 'spotlighting-datamarking';
 
-// Create an instance
+// Create an instance (defaults to alphanumeric markers)
 const marker = new DataMarkingViaSpotlighting();
 
 const text = 'Hello World';
@@ -39,25 +39,42 @@ const text = 'Hello World';
 // Basic usage - mark all spaces (sandwich mode enabled by default)
 const result1 = marker.markData(text);
 console.log(result1.markedText); // [MARKER]Hello[MARKER]World[MARKER]
-console.log(result1.dataMarker); // The marker used
+console.log(result1.dataMarker); // The marker used (alphanumeric)
 
 // Disable sandwich wrapping if needed
 const result2 = marker.markData(text, { sandwich: false });
 console.log(result2.markedText); // Hello[MARKER]World
 
+// Use Unicode markers instead (invisible)
+const result3 = marker.markData(text, { markerType: 'unicode' });
+console.log(result3.markedText); // HelloWorld (markers are invisible Unicode PUA)
+
 // Random marking - insert markers probabilistically (sandwich mode enabled by default)
-const result3 = marker.randomlyMarkData(text);
-console.log(result3.markedText); // [MARKER]Hello[MARKER]World[MARKER] (markers inserted randomly)
-console.log(result3.dataMarker); // The marker used
+const result4 = marker.randomlyMarkData(text);
+console.log(result4.markedText); // [MARKER]Hello[MARKER]World[MARKER] (markers inserted randomly)
+console.log(result4.dataMarker); // The marker used
 
 // Random marking with custom options
-const result4 = marker.randomlyMarkData(text, {
+const result5 = marker.randomlyMarkData(text, {
   p: 0.5, // Probability of marker insertion (0-1)
   minGap: 2, // Minimum tokens between markers
   encoding: 'cl100k_base', // Tokenizer encoding
   sandwich: false, // Set to false to disable wrapping text with markers (default: true)
+  markerType: 'unicode', // Override to use Unicode markers for this call
 });
-console.log(result4.markedText); // Hello[MARKER]World (at least one marker guaranteed)
+console.log(result5.markedText); // Hello[UNICODE_MARKER]World (at least one marker guaranteed)
+
+// Create instance with Unicode markers by default
+const unicodeMarker = new DataMarkingViaSpotlighting(
+  7,
+  12,
+  0.2,
+  1,
+  'cl100k_base',
+  'unicode'
+);
+const result6 = unicodeMarker.markData(text);
+console.log(result6.markedText); // HelloWorld (invisible Unicode markers)
 ```
 
 ## Constructor Options
@@ -68,7 +85,8 @@ new DataMarkingViaSpotlighting(
   maxK,
   defaultP,
   defaultMinGap,
-  defaultEncoding
+  defaultEncoding,
+  markerType
 );
 ```
 
@@ -77,6 +95,104 @@ new DataMarkingViaSpotlighting(
 - `defaultP` - Default probability of marker insertion (default: 0.2)
 - `defaultMinGap` - Default minimum gap between markers (default: 1)
 - `defaultEncoding` - Default tokenizer encoding (default: 'cl100k_base')
+- `markerType` - Type of markers to generate (default: 'alphanumeric')
+  - `'alphanumeric'` - Readable markers using 0-9, a-z, A-Z (default)
+  - `'unicode'` - Invisible markers using Unicode Private Use Area (PUA) characters
+
+## Marker Types: Alphanumeric vs Unicode
+
+The library supports two types of markers, each with distinct advantages:
+
+### Alphanumeric Markers (Default)
+
+```javascript
+const marker = new DataMarkingViaSpotlighting();
+// Or explicitly:
+const marker = new DataMarkingViaSpotlighting(
+  7,
+  12,
+  0.2,
+  1,
+  'cl100k_base',
+  'alphanumeric'
+);
+
+const result = marker.markData('Hello World');
+console.log(result.markedText); // Example: "abc123XYZHelloabc123XYZWorldabc123XYZ"
+console.log(result.dataMarker); // Example: "abc123XYZ"
+```
+
+**Advantages:**
+
+- ✅ **Visible and readable** - Easy to debug and test
+- ✅ **Token efficient** - Takes fewer tokens in LLM context
+- ✅ **Clear separation** - Obvious visual distinction from content
+- ✅ **Development-friendly** - Great for logs and debugging
+
+**Best for:** Development, testing, debugging, logs
+
+### Unicode Markers (Invisible)
+
+```javascript
+const marker = new DataMarkingViaSpotlighting(
+  7,
+  12,
+  0.2,
+  1,
+  'cl100k_base',
+  'unicode'
+);
+
+const result = marker.markData('Hello World');
+console.log(result.markedText); // Looks like: "HelloWorld" (markers are invisible)
+console.log(result.dataMarker); // Unicode PUA characters (U+E000-U+F8FF)
+```
+
+**Advantages:**
+
+- ✅ **Invisible to users** - Clean output presentation
+- ✅ **Non-interfering** - PUA characters don't affect text meaning or rendering
+- ✅ **Professional appearance** - User-facing applications stay clean
+- ✅ **Semantic separation** - Markers are completely distinct from content
+
+**Trade-off:**
+
+- ⚠️ **Higher token usage** - Unicode PUA characters consume more tokens in LLM context
+- ⚠️ **Harder to debug** - Markers are invisible in standard output
+
+**Best for:** Production, user-facing applications, clean interfaces
+
+### Runtime Marker Type Override
+
+You can override the marker type for individual method calls:
+
+```javascript
+// Instance defaults to alphanumeric
+const marker = new DataMarkingViaSpotlighting();
+
+// Use default alphanumeric
+const result1 = marker.markData('Hello World');
+
+// Override to unicode for this call
+const result2 = marker.markData('Hello World', { markerType: 'unicode' });
+
+// Explicitly use alphanumeric
+const result3 = marker.markData('Hello World', { markerType: 'alphanumeric' });
+```
+
+### Token Usage Comparison
+
+**Why this matters:**
+
+- **Unicode (PUA) markers** take up more tokens in LLM context due to their UTF-8 encoding, which can impact your token budget and costs
+- **Alphanumeric markers** are more token-efficient, using standard ASCII characters that LLMs tokenize efficiently
+- **However**, Unicode PUA characters ensure complete separation from content - they can never be confused with actual text since they're from a reserved character range
+
+**Recommendation:**
+
+- Use **alphanumeric** (default) for most cases - better token efficiency
+- Use **unicode** when you need invisible markers or guaranteed non-interference with user content
+- Consider your use case: development vs production, token budget, user experience
 
 ## Methods
 
@@ -87,6 +203,7 @@ Marks all spaces in the text with data markers.
 **Options:**
 
 - `sandwich` - Whether to wrap the entire text with markers at the beginning and end (default: `true`)
+- `markerType` - Type of marker to use: `'alphanumeric'` or `'unicode'` (default: uses constructor setting)
 
 ### `randomlyMarkData(text, options?)`
 
@@ -99,12 +216,25 @@ Randomly inserts markers between tokens based on probability. **Always guarantee
 - `encoding` - Tokenizer encoding (default: `'cl100k_base'`)
   - Available options: `'cl100k_base'` (GPT-4), `'p50k_base'` (Codex), `'r50k_base'` (GPT-2/3), `'gpt2'`
 - `sandwich` - Whether to wrap the entire text with markers at the beginning and end (default: `true`)
+- `markerType` - Type of marker to use: `'alphanumeric'` or `'unicode'` (default: uses constructor setting)
 
 > **Security Feature**: This method always ensures at least one marker is inserted between tokens, even if the probability calculation would result in no markers. This prevents untrusted data from passing through completely unmarked (except for sandwich wrappers), providing consistent protection against prompt injection attacks.
 
-### `genDataMarker()`
+### `genDataMarkerUniCode()`
 
 Generates a random data marker string using Private Use Area (PUA) Unicode characters.
+
+### `genDataMarkerAlphaNum()`
+
+Generates a random data marker string using alphanumeric characters (0-9, a-z, A-Z).
+
+### `genDataMarker(markerType?)`
+
+Generates a data marker based on the specified type (or uses the instance's default).
+
+**Parameters:**
+
+- `markerType` - Optional override: `'alphanumeric'` or `'unicode'`
 
 ## Sandwich Mode (Default)
 

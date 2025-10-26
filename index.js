@@ -1,10 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { getEncoding } from 'js-tiktoken';
 
-const PUA_START = 0xe000,
-  PUA_END = 0xf8ff,
-  N = PUA_END - PUA_START + 1;
-
 class DataMarkingViaSpotlighting {
   /**
    * @param {number} minK - Minimum marker length (default: 7)
@@ -13,22 +9,29 @@ class DataMarkingViaSpotlighting {
    * @param {number} defaultMinGap - Default minimum gap between markers (default: 1)
    * @param {string} defaultEncoding - Default tokenizer encoding (default: 'cl100k_base')
    *                                  Options: 'cl100k_base' (GPT-4), 'p50k_base' (Codex), 'r50k_base' (GPT-2/3), 'gpt2'
+   * @param {string} markerType - Type of marker to generate (default: 'alphanumeric')
+   *                             Options: 'alphanumeric' (readable), 'unicode' (invisible PUA characters)
    */
   constructor(
     minK = 7,
     maxK = 12,
     defaultP = 0.2,
     defaultMinGap = 1,
-    defaultEncoding = 'cl100k_base'
+    defaultEncoding = 'cl100k_base',
+    markerType = 'alphanumeric'
   ) {
     this.minK = minK;
     this.maxK = maxK;
     this.defaultP = defaultP;
     this.defaultMinGap = defaultMinGap;
     this.encoding = defaultEncoding;
+    this.markerType = markerType;
   }
 
-  genDataMarker() {
+  genDataMarkerUniCode() {
+    const PUA_START = 0xe000,
+      PUA_END = 0xf8ff,
+      N = PUA_END - PUA_START + 1;
     const k = this.minK + randomInt(this.maxK - this.minK + 1);
     let s = '';
     for (let i = 0; i < k; i++) {
@@ -38,9 +41,35 @@ class DataMarkingViaSpotlighting {
     return s.normalize('NFC');
   }
 
+  genDataMarkerAlphaNum() {
+    const chars =
+      '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const k = this.minK + randomInt(this.maxK - this.minK + 1);
+    let s = '';
+    for (let i = 0; i < k; i++) {
+      const idx = randomInt(chars.length);
+      s += chars[idx];
+    }
+    return s;
+  }
+
+  genDataMarker(markerType = null) {
+    const type = markerType || this.markerType;
+
+    if (type === 'unicode') {
+      return this.genDataMarkerUniCode();
+    } else if (type === 'alphanumeric') {
+      return this.genDataMarkerAlphaNum();
+    } else {
+      throw new Error(
+        `Invalid marker type: ${type}. Use 'alphanumeric' or 'unicode'.`
+      );
+    }
+  }
+
   markData(text, options = {}) {
-    const { sandwich = true } = options;
-    const dataMarker = this.genDataMarker();
+    const { sandwich = true, markerType = null } = options;
+    const dataMarker = this.genDataMarker(markerType);
     // Replace each whitespace character individually to preserve 1:1 fidelity
     let markedText = text.replace(/\s/g, dataMarker);
 
@@ -60,11 +89,12 @@ class DataMarkingViaSpotlighting {
       minGap = this.defaultMinGap,
       encoding = this.encoding,
       sandwich = true,
+      markerType = null,
     } = options;
 
     const enc = getEncoding(encoding);
     const ids = enc.encode(text);
-    const dataMarker = this.genDataMarker();
+    const dataMarker = this.genDataMarker(markerType);
 
     // Handle single long token by splitting it
     if (ids.length === 1 && text.length >= 8) {

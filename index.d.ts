@@ -1,12 +1,16 @@
+export type MarkerType = 'alphanumeric' | 'unicode';
+
 export interface RandomMarkingOptions {
   p?: number;
   minGap?: number;
   encoding?: string;
   sandwich?: boolean;
+  markerType?: MarkerType;
 }
 
 export interface MarkingOptions {
   sandwich?: boolean;
+  markerType?: MarkerType;
 }
 
 export interface MarkingResult {
@@ -20,16 +24,20 @@ export class DataMarkingViaSpotlighting {
   defaultP: number;
   defaultMinGap: number;
   encoding: string;
+  markerType: MarkerType;
 
   constructor(
     minK?: number,
     maxK?: number,
     defaultP?: number,
     defaultMinGap?: number,
-    defaultEncoding?: string
+    defaultEncoding?: string,
+    markerType?: MarkerType
   );
 
-  genDataMarker(): string;
+  genDataMarkerUniCode(): string;
+  genDataMarkerAlphaNum(): string;
+  genDataMarker(markerType?: MarkerType): string;
   markData(text: string, options?: MarkingOptions): MarkingResult;
   randomlyMarkData(text: string, options?: RandomMarkingOptions): MarkingResult;
 }
