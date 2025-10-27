@@ -105,23 +105,18 @@ class DataMarkingViaSpotlighting {
       return { markedText, dataMarker };
     }
 
-    // Build token array by decoding each individually (needed for insertion logic)
-    const tokens = [];
-    for (let i = 0; i < ids.length; i++) {
-      tokens.push(enc.decode([ids[i]]));
-    }
-
+    // Decode tokens and probabilistically insert markers in a single pass
     const out = [];
     let gapSinceLastMarker = 0;
     let markerWasInserted = false;
 
-    // First pass: probabilistic insertion
-    for (let i = 0; i < tokens.length; i++) {
-      out.push(tokens[i]);
+    for (let i = 0; i < ids.length; i++) {
+      // Decode token directly into output array
+      out.push(enc.decode([ids[i]]));
 
       // Try to insert marker after this token (but not after the last token)
       if (
-        i < tokens.length - 1 &&
+        i < ids.length - 1 &&
         gapSinceLastMarker >= minGap &&
         randomInt(1e9) / 1e9 < p
       ) {
@@ -135,16 +130,13 @@ class DataMarkingViaSpotlighting {
 
     // Fallback: ensure at least one marker if none were inserted
     if (!markerWasInserted && ids.length > 1) {
-      // Auto-adjust minGap if it's unreasonably large (> half the tokens)
-      // This ensures markers can be inserted in the middle region of the text
-      const effectiveMinGap = Math.min(minGap, Math.floor(ids.length / 2));
+      // Clamp minGap to reasonable range (at least 1, at most half the tokens)
+      // and use as the minimum insertion index
+      const minIdx = Math.min(Math.max(minGap, 1), Math.floor(ids.length / 2));
+      const maxIdx = ids.length;
 
-      // Find valid insertion points (respecting effectiveMinGap from start)
-      const minIdx = Math.max(effectiveMinGap, 1);
-      const maxIdx = ids.length - 1;
-      // Ensure we have a valid range
-      const insertionPoint =
-        minIdx >= maxIdx ? maxIdx : minIdx + randomInt(maxIdx - minIdx + 1);
+      // Random insertion point in range [minIdx, maxIdx)
+      const insertionPoint = minIdx + randomInt(maxIdx - minIdx);
       out.splice(insertionPoint, 0, dataMarker);
     }
 
