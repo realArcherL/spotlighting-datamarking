@@ -28,16 +28,22 @@ describe('DataMarkingViaSpotlighting', () => {
       expect(marker.maxK).toBe(12);
       expect(marker.defaultP).toBe(0.2);
       expect(marker.defaultMinGap).toBe(1);
-      expect(marker.encoding).toBe('cl100k_base');
+      expect(marker.markerType).toBe('alphanumeric');
     });
 
     test('should create instance with custom values', () => {
-      const customMarker = new DataMarkingViaSpotlighting(5, 8, 0.3, 2, 'gpt2');
+      const customMarker = new DataMarkingViaSpotlighting(
+        5,
+        8,
+        0.3,
+        2,
+        'unicode'
+      );
       expect(customMarker.minK).toBe(5);
       expect(customMarker.maxK).toBe(8);
       expect(customMarker.defaultP).toBe(0.3);
       expect(customMarker.defaultMinGap).toBe(2);
-      expect(customMarker.encoding).toBe('gpt2');
+      expect(customMarker.markerType).toBe('unicode');
     });
   });
 

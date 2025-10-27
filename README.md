@@ -58,7 +58,6 @@ console.log(result4.dataMarker); // The marker used
 const result5 = marker.randomlyMarkData(text, {
   p: 0.5, // Probability of marker insertion (0-1)
   minGap: 2, // Minimum tokens between markers
-  encoding: 'cl100k_base', // Tokenizer encoding
   sandwich: false, // Set to false to disable wrapping text with markers (default: true)
   markerType: 'unicode', // Override to use Unicode markers for this call
 });
@@ -66,12 +65,11 @@ console.log(result5.markedText); // Hello[UNICODE_MARKER]World (at least one mar
 
 // Create instance with Unicode markers by default
 const unicodeMarker = new DataMarkingViaSpotlighting(
-  7,
-  12,
-  0.2,
-  1,
-  'cl100k_base',
-  'unicode'
+  7, // minK
+  12, // maxK
+  0.2, // defaultP
+  1, // defaultMinGap
+  'unicode' // markerType
 );
 const result6 = unicodeMarker.markData(text);
 console.log(result6.markedText); // HelloWorld (invisible Unicode markers)
@@ -80,24 +78,18 @@ console.log(result6.markedText); // HelloWorld (invisible Unicode markers)
 ## Constructor Options
 
 ```javascript
-new DataMarkingViaSpotlighting(
-  minK,
-  maxK,
-  defaultP,
-  defaultMinGap,
-  defaultEncoding,
-  markerType
-);
+new DataMarkingViaSpotlighting(minK, maxK, defaultP, defaultMinGap, markerType);
 ```
 
 - `minK` - Minimum marker length (default: 7)
 - `maxK` - Maximum marker length (default: 12)
 - `defaultP` - Default probability of marker insertion (default: 0.2)
 - `defaultMinGap` - Default minimum gap between markers (default: 1)
-- `defaultEncoding` - Default tokenizer encoding (default: 'cl100k_base')
 - `markerType` - Type of markers to generate (default: 'alphanumeric')
   - `'alphanumeric'` - Readable markers using 0-9, a-z, A-Z (default)
   - `'unicode'` - Invisible markers using Unicode Private Use Area (PUA) characters
+
+**Note:** This package uses the `cl100k_base` tokenizer (GPT-4) internally for consistent token-based spacing.
 
 ### Runtime Marker Type Override
 
@@ -150,12 +142,12 @@ Randomly inserts markers between tokens based on probability. **Always guarantee
 
 - `p` - Probability of marker insertion (0-1) (default: `0.2`)
 - `minGap` - Minimum tokens between markers (default: `1`)
-- `encoding` - Tokenizer encoding (default: `'cl100k_base'`)
-  - Available options: `'cl100k_base'` (GPT-4), `'p50k_base'` (Codex), `'r50k_base'` (GPT-2/3), `'gpt2'`
 - `sandwich` - Whether to wrap the entire text with markers at the beginning and end (default: `true`)
 - `markerType` - Type of marker to use: `'alphanumeric'` or `'unicode'` (default: uses constructor setting)
 
 > **Security Feature**: This method always ensures at least one marker is inserted between tokens, even if the probability calculation would result in no markers. This prevents untrusted data from passing through completely unmarked (except for sandwich wrappers), providing consistent protection against prompt injection attacks.
+
+> **Tokenization**: Uses the `cl100k_base` tokenizer (GPT-4) internally for consistent token counting and spacing.
 
 ### `genDataMarkerUniCode()`
 

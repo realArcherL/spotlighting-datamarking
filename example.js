@@ -155,7 +155,7 @@ const shortMarker = new DataMarkingViaSpotlighting(
   5, // maxK: maximum marker length
   0.3, // defaultP
   1, // defaultMinGap
-  'cl100k_base'
+  'alphanumeric' // markerType
 );
 
 printExample(
@@ -171,7 +171,7 @@ const longMarker = new DataMarkingViaSpotlighting(
   15, // maxK
   0.3, // defaultP
   1, // defaultMinGap
-  'cl100k_base'
+  'alphanumeric' // markerType
 );
 
 printExample(
@@ -215,8 +215,7 @@ const unicodeMarker = new DataMarkingViaSpotlighting(
   12,
   0.2,
   1,
-  'cl100k_base',
-  'unicode'
+  'unicode' // markerType
 );
 const unicodeResult = unicodeMarker.randomlyMarkData(markerTypeText, {
   p: 0.3,

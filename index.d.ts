@@ -3,7 +3,6 @@ export type MarkerType = 'alphanumeric' | 'unicode';
 export interface RandomMarkingOptions {
   p?: number;
   minGap?: number;
-  encoding?: string;
   sandwich?: boolean;
   markerType?: MarkerType;
 }
@@ -23,7 +22,6 @@ export class DataMarkingViaSpotlighting {
   maxK: number;
   defaultP: number;
   defaultMinGap: number;
-  encoding: string;
   markerType: MarkerType;
 
   constructor(
@@ -31,7 +29,6 @@ export class DataMarkingViaSpotlighting {
     maxK?: number,
     defaultP?: number,
     defaultMinGap?: number,
-    defaultEncoding?: string,
     markerType?: MarkerType
   );
 
