@@ -15,6 +15,7 @@ export interface MarkingOptions {
 export interface MarkingResult {
   markedText: string;
   dataMarker: string;
+  prompt: string;
 }
 
 export class DataMarkingViaSpotlighting {

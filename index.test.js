@@ -679,4 +679,122 @@ describe('DataMarkingViaSpotlighting', () => {
       expect(result.markedText).toContain(result.dataMarker);
     });
   });
+
+  describe('base64EncodeData()', () => {
+    test('should encode simple text to Base64', () => {
+      const text = 'Hello World';
+      const result = marker.base64EncodeData(text);
+
+      expect(result.markedText).toBeDefined();
+      expect(result.prompt).toBeDefined();
+      expect(result.markedText).toBe('SGVsbG8gV29ybGQ=');
+      expect(typeof result.markedText).toBe('string');
+    });
+
+    test('should handle Unicode characters', () => {
+      const text = 'Hello 世界';
+      const result = marker.base64EncodeData(text);
+
+      expect(result.markedText).toBeDefined();
+
+      // Verify it can be decoded back correctly
+      const decoded = Buffer.from(result.markedText, 'base64').toString(
+        'utf-8'
+      );
+      expect(decoded).toBe(text);
+    });
+
+    test('should handle emojis and special characters', () => {
+      const text = '🎉 Hello! Émojis: ™®© 😀';
+      const result = marker.base64EncodeData(text);
+
+      expect(result.markedText).toBeDefined();
+
+      // Verify it can be decoded back correctly
+      const decoded = Buffer.from(result.markedText, 'base64').toString(
+        'utf-8'
+      );
+      expect(decoded).toBe(text);
+    });
+
+    test('should handle empty string', () => {
+      const text = '';
+      const result = marker.base64EncodeData(text);
+
+      expect(result.markedText).toBe('');
+      expect(result.prompt).toBeDefined();
+    });
+
+    test('should handle multi-line text', () => {
+      const text = 'Line 1\nLine 2\nLine 3';
+      const result = marker.base64EncodeData(text);
+
+      expect(result.markedText).toBeDefined();
+
+      // Verify it can be decoded back correctly
+      const decoded = Buffer.from(result.markedText, 'base64').toString(
+        'utf-8'
+      );
+      expect(decoded).toBe(text);
+    });
+
+    test('should handle text with special whitespace characters', () => {
+      const text = 'Text\twith\ttabs\nand\nnewlines\rand\rcarriage returns';
+      const result = marker.base64EncodeData(text);
+
+      expect(result.markedText).toBeDefined();
+
+      // Verify it can be decoded back correctly
+      const decoded = Buffer.from(result.markedText, 'base64').toString(
+        'utf-8'
+      );
+      expect(decoded).toBe(text);
+    });
+
+    test('should return correct prompt format', () => {
+      const text = 'Test data';
+      const result = marker.base64EncodeData(text);
+
+      expect(result.prompt).toContain('base64');
+      expect(result.prompt).toContain('data');
+      expect(result.prompt).toContain('instructions');
+    });
+
+    test('should handle very long text', () => {
+      const text = 'A'.repeat(100000);
+      const result = marker.base64EncodeData(text);
+
+      expect(result.markedText).toBeDefined();
+
+      // Verify it can be decoded back correctly
+      const decoded = Buffer.from(result.markedText, 'base64').toString(
+        'utf-8'
+      );
+      expect(decoded).toBe(text);
+    });
+
+    test('should handle all Unicode planes', () => {
+      // Test various Unicode ranges
+      const text =
+        'Latin: Hello ' +
+        'CJK: 你好世界 ' +
+        'Arabic: مرحبا ' +
+        'Hebrew: שלום ' +
+        'Cyrillic: Привет ' +
+        'Greek: Γεια ' +
+        'Emoji: 😀🎉💯 ' +
+        'Math: ∑∫∂∇ ' +
+        'Symbols: ™®©€£¥';
+
+      const result = marker.base64EncodeData(text);
+
+      expect(result.markedText).toBeDefined();
+
+      // Verify it can be decoded back correctly
+      const decoded = Buffer.from(result.markedText, 'base64').toString(
+        'utf-8'
+      );
+      expect(decoded).toBe(text);
+    });
+  });
 });
