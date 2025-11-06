@@ -491,6 +491,114 @@ describe('DataMarkingViaSpotlighting', () => {
     });
   });
 
+  describe('Emoji and Multi-byte Character Preservation', () => {
+    test('should preserve simple emojis without corruption', () => {
+      const text = 'Hello 👋 World 😊';
+      const result = marker.randomlyMarkData(text, { p: 0.5 });
+
+      // Remove all markers and verify text is unchanged
+      const cleanedText = result.markedText.split(result.dataMarker).join('');
+      expect(cleanedText).toBe(text);
+
+      // Verify no replacement characters (�) indicating corruption
+      expect(result.markedText).not.toContain('�');
+    });
+
+    test('should preserve multi-token emojis', () => {
+      const text = 'Emoji test 😊 🎉 💯';
+      const result = marker.randomlyMarkData(text, { p: 0.5 });
+
+      const cleanedText = result.markedText.split(result.dataMarker).join('');
+      expect(cleanedText).toBe(text);
+      expect(result.markedText).not.toContain('�');
+    });
+
+    test('should preserve compound emojis with ZWJ sequences', () => {
+      const text = 'Family emoji: 👨‍👩‍👧‍👦 here';
+      const result = marker.randomlyMarkData(text, { p: 0.5 });
+
+      const cleanedText = result.markedText.split(result.dataMarker).join('');
+      expect(cleanedText).toBe(text);
+      expect(result.markedText).not.toContain('�');
+    });
+
+    test('should preserve emojis with skin tone modifiers', () => {
+      const text = 'Hands: 👍🏽 👋🏾 👏🏿';
+      const result = marker.randomlyMarkData(text, { p: 0.5 });
+
+      const cleanedText = result.markedText.split(result.dataMarker).join('');
+      expect(cleanedText).toBe(text);
+      expect(result.markedText).not.toContain('�');
+    });
+
+    test('should preserve special Unicode characters', () => {
+      const text = 'Special chars: ™®© and symbols ✓✗→';
+      const result = marker.randomlyMarkData(text, { p: 0.5 });
+
+      const cleanedText = result.markedText.split(result.dataMarker).join('');
+      expect(cleanedText).toBe(text);
+      expect(result.markedText).not.toContain('�');
+    });
+
+    test('should preserve multi-byte characters (Chinese, Japanese, Korean)', () => {
+      const text = '你好世界 こんにちは 안녕하세요';
+      const result = marker.randomlyMarkData(text, { p: 0.5 });
+
+      const cleanedText = result.markedText.split(result.dataMarker).join('');
+      expect(cleanedText).toBe(text);
+      expect(result.markedText).not.toContain('�');
+    });
+
+    test('should preserve mixed content with emojis and special chars', () => {
+      const text = 'Multi-byte: 你好 🌏 Café ñoño™';
+      const result = marker.randomlyMarkData(text, { p: 0.5 });
+
+      const cleanedText = result.markedText.split(result.dataMarker).join('');
+      expect(cleanedText).toBe(text);
+      expect(result.markedText).not.toContain('�');
+    });
+
+    test('should preserve emojis across multiple runs', () => {
+      const text = '🎉 Party time 🎊 celebration 🎈';
+
+      // Run 10 times to ensure consistency
+      for (let i = 0; i < 10; i++) {
+        const result = marker.randomlyMarkData(text, { p: 0.3 });
+        const cleanedText = result.markedText.split(result.dataMarker).join('');
+
+        expect(cleanedText).toBe(text);
+        expect(result.markedText).not.toContain('�');
+      }
+    });
+
+    test('should preserve flag emojis', () => {
+      const text = 'Flags: 🇺🇸 🇬🇧 🇯🇵 🇮🇳';
+      const result = marker.randomlyMarkData(text, { p: 0.5 });
+
+      const cleanedText = result.markedText.split(result.dataMarker).join('');
+      expect(cleanedText).toBe(text);
+      expect(result.markedText).not.toContain('�');
+    });
+
+    test('should handle emoji-heavy text', () => {
+      const text = '😀😃😄😁😆😅🤣😂🙂🙃😉😊😇';
+      const result = marker.randomlyMarkData(text, { p: 0.5 });
+
+      const cleanedText = result.markedText.split(result.dataMarker).join('');
+      expect(cleanedText).toBe(text);
+      expect(result.markedText).not.toContain('�');
+    });
+
+    test('should preserve emojis even with high probability and low minGap', () => {
+      const text = 'Test 👋 with 😊 many 🎉 emojis 💯 here 🔥';
+      const result = marker.randomlyMarkData(text, { p: 0.9, minGap: 1 });
+
+      const cleanedText = result.markedText.split(result.dataMarker).join('');
+      expect(cleanedText).toBe(text);
+      expect(result.markedText).not.toContain('�');
+    });
+  });
+
   describe('Probability vs Determinism', () => {
     test('should produce different results with same input (probability-based)', () => {
       const text = 'The quick brown fox jumps over the lazy dog';
