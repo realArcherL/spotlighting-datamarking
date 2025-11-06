@@ -18,6 +18,11 @@ export interface MarkingResult {
   prompt: string;
 }
 
+export interface Base64MarkingResult {
+  markedText: string;
+  prompt: string;
+}
+
 export class DataMarkingViaSpotlighting {
   minK: number;
   maxK: number;
@@ -38,4 +43,5 @@ export class DataMarkingViaSpotlighting {
   genDataMarker(markerType?: MarkerType): string;
   markData(text: string, options?: MarkingOptions): MarkingResult;
   randomlyMarkData(text: string, options?: RandomMarkingOptions): MarkingResult;
+  base64EncodeData(text: string): Base64MarkingResult;
 }
