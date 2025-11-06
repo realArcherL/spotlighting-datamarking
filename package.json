@@ -1,6 +1,6 @@
 {
   "name": "spotlighting-datamarking",
-  "version": "3.3.0",
+  "version": "1.0.0-alpha",
   "description": "This is a package to implement data marking functionality to make indirect prompt injections difficult, based on the research done by Microsoft",
   "main": "index.js",
   "type": "module",
