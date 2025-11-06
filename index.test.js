@@ -26,7 +26,7 @@ describe('DataMarkingViaSpotlighting', () => {
     test('should create instance with default values', () => {
       expect(marker.minK).toBe(7);
       expect(marker.maxK).toBe(12);
-      expect(marker.defaultP).toBe(0.2);
+      expect(marker.defaultP).toBe(0.5);
       expect(marker.defaultMinGap).toBe(1);
       expect(marker.markerType).toBe('alphanumeric');
     });
