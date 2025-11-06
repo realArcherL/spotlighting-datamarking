@@ -429,7 +429,7 @@ describe('DataMarkingViaSpotlighting', () => {
       expect(result.markedText.startsWith(result.dataMarker)).toBe(true);
       expect(result.markedText.endsWith(result.dataMarker)).toBe(true);
 
-      // With p=0.2 and 100 words, should have multiple markers
+      // With p=0.5 and 100 words, should have multiple markers
       // (at least sandwich + some internal markers)
       const markerCount = result.markedText.split(result.dataMarker).length - 1;
       expect(markerCount).toBeGreaterThanOrEqual(3);
