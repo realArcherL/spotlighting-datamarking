@@ -212,17 +212,16 @@ The marked data prevents the LLM from interpreting `"Ignore previous instruction
 
 ## Choosing a Strategy
 
-| Strategy               | Best For                                   | Pros                              | Cons                           |
-| ---------------------- | ------------------------------------------ | --------------------------------- | ------------------------------ |
-| **markData()**         | Structured data with clear word boundaries | Simple, predictable               | Visible, increases tokens      |
-| **randomlyMarkData()** | General text data                          | Balanced protection, configurable | Slightly complex               |
-| **base64EncodeData()** | Highly sensitive data, maximum separation  | Complete encoding, AI can decode  | More tokens, requires decoding |
+| Strategy               | Best For                                   | Pros                              | Cons                                            |
+| ---------------------- | ------------------------------------------ | --------------------------------- | ----------------------------------------------- |
+| **markData()**         | Structured data with clear word boundaries | Simple, predictable               | Visible, increases tokens                       |
+| **randomlyMarkData()** | General text data                          | Balanced protection, configurable | Slightly complex                                |
+| **base64EncodeData()** | Best data-instruction separation           | Complete encoding, AI can decode  | More tokens, requires decoding (GPT4 and above) |
 
 ### Token Efficiency
 
 - **Alphanumeric markers**: More token-efficient (standard ASCII)
 - **Unicode markers**: Less efficient but invisible and guaranteed non-interference
-- **Base64**: Increases token count by ~33% but provides maximum protection
 
 ### Recommendations
 
