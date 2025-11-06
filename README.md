@@ -59,7 +59,7 @@ new DataMarkingViaSpotlighting(minK, maxK, defaultP, defaultMinGap, markerType);
 | --------------- | ------ | ---------------- | -------------------------------------------- |
 | `minK`          | number | `7`              | Minimum marker length                        |
 | `maxK`          | number | `12`             | Maximum marker length                        |
-| `defaultP`      | number | `0.5`            | Default probability of marker insertion      |
+| `defaultP`      | number | `0.2`            | Default probability of marker insertion      |
 | `defaultMinGap` | number | `1`              | Default minimum tokens between markers       |
 | `markerType`    | string | `'alphanumeric'` | Marker type: `'alphanumeric'` or `'unicode'` |
 
@@ -87,7 +87,7 @@ Inserts markers probabilistically between tokens. **Always guarantees at least o
 
 **Options:**
 
-- `p` (number, default: `0.5`) - Probability of marker insertion (0-1)
+- `p` (number, default: `0.2`) - Probability of marker insertion (0-1)
 - `minGap` (number, default: `1`) - Minimum tokens between markers
 - `sandwich` (boolean, default: `true`) - Wrap text with boundary markers
 - `markerType` (string) - Override instance marker type
@@ -154,7 +154,7 @@ console.log(result.prompt); // Instructions explaining Base64 encoding to AI
 ### Unicode (Invisible) Markers
 
 ```javascript
-const unicodeMarker = new DataMarkingViaSpotlighting(7, 12, 0.5, 1, 'unicode');
+const unicodeMarker = new DataMarkingViaSpotlighting(7, 12, 0.2, 1, 'unicode');
 const result = unicodeMarker.markData('Hello World');
 
 // Markers are invisible but present
@@ -212,17 +212,16 @@ The marked data prevents the LLM from interpreting `"Ignore previous instruction
 
 ## Choosing a Strategy
 
-| Strategy               | Best For                                   | Pros                              | Cons                           |
-| ---------------------- | ------------------------------------------ | --------------------------------- | ------------------------------ |
-| **markData()**         | Structured data with clear word boundaries | Simple, predictable               | Visible, increases tokens      |
-| **randomlyMarkData()** | General text data                          | Balanced protection, configurable | Slightly complex               |
-| **base64EncodeData()** | Highly sensitive data, maximum separation  | Complete encoding, AI can decode  | More tokens, requires decoding |
+| Strategy               | Best For                                   | Pros                              | Cons                                            |
+| ---------------------- | ------------------------------------------ | --------------------------------- | ----------------------------------------------- |
+| **markData()**         | Structured data with clear word boundaries | Simple, predictable               | Visible, increases tokens                       |
+| **randomlyMarkData()** | General text data                          | Balanced protection, configurable | Slightly complex                                |
+| **base64EncodeData()** | Best data-instruction separation           | Complete encoding, AI can decode  | More tokens, requires decoding (GPT4 and above) |
 
 ### Token Efficiency
 
 - **Alphanumeric markers**: More token-efficient (standard ASCII)
 - **Unicode markers**: Less efficient but invisible and guaranteed non-interference
-- **Base64**: Increases token count by ~33% but provides maximum protection
 
 ### Recommendations
 
