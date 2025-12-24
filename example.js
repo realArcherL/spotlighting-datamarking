@@ -217,7 +217,7 @@ console.log('─'.repeat(60));
 const unicodeMarker = new DataMarkingViaSpotlighting(
   7,
   12,
-  0.2,
+  0.5,
   1,
   'unicode' // markerType
 );
