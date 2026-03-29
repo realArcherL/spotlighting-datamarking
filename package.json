@@ -1,6 +1,6 @@
 {
   "name": "spotlighting-datamarking",
-  "version": "1.0.0-alpha",
+  "version": "1.0.0-beta",
   "description": "This is a package to implement data marking functionality to make indirect prompt injections difficult, based on the research done by Microsoft",
   "main": "index.js",
   "type": "module",
@@ -33,7 +33,7 @@
     "example.js"
   ],
   "dependencies": {
-    "js-tiktoken": "^1.0.21"
+    "js-tiktoken": "1.0.21"
   },
   "devDependencies": {
     "jest": "^30.2.0"
