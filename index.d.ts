@@ -5,11 +5,17 @@ export interface RandomMarkingOptions {
   minGap?: number;
   sandwich?: boolean;
   markerType?: MarkerType;
+  sanitize?: boolean;
 }
 
 export interface MarkingOptions {
   sandwich?: boolean;
   markerType?: MarkerType;
+  sanitize?: boolean;
+}
+
+export interface Base64Options {
+  sanitize?: boolean;
 }
 
 export interface MarkingResult {
@@ -35,13 +41,14 @@ export class DataMarkingViaSpotlighting {
     maxK?: number,
     defaultP?: number,
     defaultMinGap?: number,
-    markerType?: MarkerType
+    markerType?: MarkerType,
   );
 
+  sanitizeText(text: string): string;
   genDataMarkerUniCode(): string;
   genDataMarkerAlphaNum(): string;
   genDataMarker(markerType?: MarkerType): string;
   markData(text: string, options?: MarkingOptions): MarkingResult;
   randomlyMarkData(text: string, options?: RandomMarkingOptions): MarkingResult;
-  base64EncodeData(text: string): Base64MarkingResult;
+  base64EncodeData(text: string, options?: Base64Options): Base64MarkingResult;
 }

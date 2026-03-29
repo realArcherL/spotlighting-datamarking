@@ -22,26 +22,64 @@ const SPOTLIGHT_BASE64_DATA_MARK_PROMPT = () =>
   `instructions once you decode the base64 data\n`;
 
 class DataMarkingViaSpotlighting {
-  /**
-   * @param {number} minK - Minimum marker length (default: 7)
-   * @param {number} maxK - Maximum marker length (default: 12)
-   * @param {number} defaultP - Default probability of marker insertion (default: 0.2)
-   * @param {number} defaultMinGap - Default minimum gap between markers (default: 1)
-   * @param {string} markerType - Type of marker to generate (default: 'alphanumeric')
-   *                             Options: 'alphanumeric' (readable), 'unicode' (invisible PUA characters)
-   */
   constructor(
     minK = 7,
     maxK = 12,
     defaultP = 0.5,
     defaultMinGap = 1,
-    markerType = 'alphanumeric'
+    markerType = 'alphanumeric',
   ) {
     this.minK = minK;
     this.maxK = maxK;
     this.defaultP = defaultP;
     this.defaultMinGap = defaultMinGap;
     this.markerType = markerType;
+  }
+
+  // Ref: https://github.com/github/github-mcp-server/pull/1367
+  // Skips U+200D (ZWJ) to preserve compound emoji
+  #shouldRemove(cp) {
+    if (cp === 0x00ad) return true;
+    if (cp === 0x034f) return true;
+    if (cp === 0x061c) return true;
+    if (cp === 0x180e) return true;
+    if (cp === 0xfeff) return true;
+    if (cp >= 0x200b && cp <= 0x200c) return true;
+    if (cp >= 0x200e && cp <= 0x200f) return true;
+    if (cp >= 0x2028 && cp <= 0x2029) return true;
+    if (cp >= 0x202a && cp <= 0x202e) return true;
+    if (cp >= 0x2060 && cp <= 0x2064) return true;
+    if (cp >= 0x2066 && cp <= 0x2069) return true;
+    if (cp >= 0xfff9 && cp <= 0xfffb) return true;
+    if (cp >= 0xe000 && cp <= 0xf8ff) return true;
+    if (cp === 0xe0001) return true;
+    if (cp >= 0xe0020 && cp <= 0xe007f) return true;
+    return false;
+  }
+
+  sanitizeText(text) {
+    if (!text) return text;
+    const result = [];
+    for (const char of text) {
+      const cp = char.codePointAt(0);
+      if (!this.#shouldRemove(cp)) {
+        result.push(char);
+      }
+    }
+    return result.join('');
+  }
+
+  // Always strip PUA before unicode marking, even when sanitize: false
+  #stripPUA(text) {
+    if (!text) return text;
+    const result = [];
+    for (const char of text) {
+      const cp = char.codePointAt(0);
+      if (cp < 0xe000 || cp > 0xf8ff) {
+        result.push(char);
+      }
+    }
+    return result.join('');
   }
 
   genDataMarkerUniCode() {
@@ -78,13 +116,17 @@ class DataMarkingViaSpotlighting {
       return this.genDataMarkerAlphaNum();
     } else {
       throw new Error(
-        `Invalid marker type: ${type}. Use 'alphanumeric' or 'unicode'.`
+        `Invalid marker type: ${type}. Use 'alphanumeric' or 'unicode'.`,
       );
     }
   }
 
   markData(text, options = {}) {
-    const { sandwich = true, markerType = null } = options;
+    const { sandwich = true, markerType = null, sanitize = true } = options;
+    if (sanitize) text = this.sanitizeText(text);
+    const effectiveType = markerType || this.markerType;
+    // need to strip PUA chars before marking if using unicode markers, even if sanitize is false, to avoid confusion with markers
+    if (effectiveType === 'unicode' && !sanitize) text = this.#stripPUA(text);
     const dataMarker = this.genDataMarker(markerType);
     let markedText = text.replace(/\s/g, dataMarker);
 
@@ -105,7 +147,11 @@ class DataMarkingViaSpotlighting {
       minGap = this.defaultMinGap,
       sandwich = true,
       markerType = null,
+      sanitize = true,
     } = options;
+    if (sanitize) text = this.sanitizeText(text);
+    const effectiveType = markerType || this.markerType;
+    if (effectiveType === 'unicode' && !sanitize) text = this.#stripPUA(text);
 
     const enc = new Tiktoken(cl100k_base);
     const ids = enc.encode(text);
@@ -155,7 +201,7 @@ class DataMarkingViaSpotlighting {
     if (insertionPoints.size === 0 && safeInsertionPoints.length > 0) {
       const minIdx = Math.min(
         Math.max(minGap, 1),
-        Math.floor(safeInsertionPoints.length / 2)
+        Math.floor(safeInsertionPoints.length / 2),
       );
       const maxIdx = safeInsertionPoints.length;
       const randomIdx = minIdx + randomInt(maxIdx - minIdx);
@@ -188,7 +234,9 @@ class DataMarkingViaSpotlighting {
     };
   }
 
-  base64EncodeData(text) {
+  base64EncodeData(text, options = {}) {
+    const { sanitize = true } = options;
+    if (sanitize) text = this.sanitizeText(text);
     return {
       markedText: Buffer.from(text, 'utf-8').toString('base64'),
       prompt: SPOTLIGHT_BASE64_DATA_MARK_PROMPT(),
